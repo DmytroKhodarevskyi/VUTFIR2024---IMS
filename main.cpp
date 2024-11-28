@@ -41,6 +41,7 @@ Histogram StartBalances("Start Balances", 100, 2000, 20); // Histogram for start
 Histogram EndBalances("End Balances", 100, 2000, 20);     // Histogram for end balances
 
 double CasinoBalance = SLOT_BALANCE;
+double CasinoStartBalance = SLOT_BALANCE;
 
 class Statistics
 {
@@ -58,6 +59,8 @@ public:
         int bigWins;
 
         int spins;
+
+        bool won;
     };
 
     vector<PlayerStats> playerStats;
@@ -69,7 +72,8 @@ public:
                         int losses,
                         int returns,
                         int wins,
-                        int bigWins)
+                        int bigWins,
+                        bool won = false)
     {
         PlayerStats stats;
         stats.startBalance = startBalance;
@@ -80,6 +84,7 @@ public:
         stats.returns = returns;
         stats.wins = wins;
         stats.bigWins = bigWins;
+        stats.won = won;
         playerStats.push_back(stats);
     }
 
@@ -94,6 +99,9 @@ public:
         int totalWins = 0;
         int totalBigWins = 0;
 
+        int totalWon = 0;
+        int totalLost = 0;
+
         for (unsigned int i = 0; i < playerStats.size(); i++)
         {
             totalStartBalance += playerStats[i].startBalance;
@@ -104,10 +112,19 @@ public:
             totalReturns += playerStats[i].returns;
             totalWins += playerStats[i].wins;
             totalBigWins += playerStats[i].bigWins;
+
+            if (playerStats[i].won)
+            {
+                totalWon++;
+            }
+            else
+            {
+                totalLost++;
+            }
         }
 
         double winrate = static_cast<double>(totalWins + totalBigWins) / totalSpins;
-        double meanWinrate = winrate / static_cast<double>(playerStats.size());
+        // double meanWinrate = winrate / static_cast<double>(playerStats.size());
         double meanLosses = static_cast<double>(totalLosses) / playerStats.size();
         double meanReturns = static_cast<double>(totalReturns) / playerStats.size();
         double meanWins = static_cast<double>(totalWins) / playerStats.size();
@@ -124,7 +141,7 @@ public:
         double multipliers[] = {0, 1, meanWinMultiplier, meanJackpotMultiplier};
 
         int num_outcomes = sizeof(probabilities) / sizeof(probabilities[0]);
-        
+
         double rtp = 0.0;
 
         // Iterate through all outcomes to calculate weighted payout
@@ -137,28 +154,30 @@ public:
 
         cout << endl
              << "+========================================+" << endl;
-        cout << "Total players: " << playerStats.size() << endl;
-        cout << "Total spins: " << totalSpins << endl;
-        cout << "Total losses: " << totalLosses << endl;
-        cout << "Total returns: " << totalReturns << endl;
-        cout << "Total wins: " << totalWins << endl;
-        cout << "Total big wins: " << totalBigWins << endl;
+        cout << "| " << "Total players: " << playerStats.size() << " |" << endl;
+        cout << "| " << "Total spins: " << totalSpins << " |" << endl;
+        cout << "| " << "Total losses: " << totalLosses << " |" << endl;
+        cout << "| " << "Total returns: " << totalReturns << " |" << endl;
+        cout << "| " << "Total wins: " << totalWins << " |" << endl;
+        cout << "| " << "Total big wins: " << totalBigWins << " |" << endl;
+        cout << "| " << "Total poeple won: " << totalWon << " |" << endl;
+        cout << "| " << "Total people lost: " << totalLost << " |" << endl;
         cout << "+========================================+" << endl;
-        cout << "Mean start balance: " << meanStartBalance << " dollars." << endl;
-        cout << "Mean end balance: " << meanEndBalance << " dollars." << endl;
+        cout << "| " << "Mean start balance: " << meanStartBalance << " dollars." << " |" << endl;
+        cout << "| " << "Mean end balance: " << meanEndBalance << " dollars." << " |" << endl;
         cout << "+========================================+" << endl;
-        cout << "Mean time played: " << meanTimePlayed << " seconds." << endl;
+        cout << "| " << "Mean time played: " << meanTimePlayed << " seconds." << " |" << endl;
         cout << "+========================================+" << endl;
-        cout << "Mean spins: " << meanSpins << endl;
+        cout << "| " << "Mean spins per person: " << meanSpins << " |" << endl;
         cout << "+========================================+" << endl;
-        cout << "Mean losses: " << meanLosses << endl;
-        cout << "Mean returns: " << meanReturns << endl;
-        cout << "Mean wins: " << meanWins << endl;
-        cout << "Mean big wins: " << meanBigWins << endl;
+        cout << "| " << "Mean losses per person: " << meanLosses << " |" << endl;
+        cout << "| " << "Mean returns per person: " << meanReturns << " |" << endl;
+        cout << "| " << "Mean wins per person: " << meanWins << " |" << endl;
+        cout << "| " << "Mean big wins per person: " << meanBigWins << " |" << endl;
         cout << "+========================================+" << endl;
-        cout << "Mean winrate: " << meanWinrate << endl;
+        cout << "| " << "Mean winrate: " << winrate << " |" << endl;
         cout << "+========================================+" << endl;
-        cout << "RTP: " << rtp_percentage << endl;
+        cout << "| " << "RTP: " << rtp_percentage << "%" << " |" << endl;
         cout << "+========================================+" << endl;
     }
 };
@@ -294,13 +313,20 @@ class Player : public Process
             }
         }
 
-        cout << "Player " << Name() << " End balance " << balance << " dollars." << endl;
+        // cout << "Player " << Name() << " End balance " << balance << " dollars." << endl;
         EndBalances(balance);
         // Test(Time - EntryTime);
 
         // cout << "WINS: " << wins << " BIG WINS: " << bigWins << " RETURNS: " << returns << " LOSSES: " << losses << endl;
 
-        stats.AddPlayerStats(startBalance, balance, Time - EntryTime, spins, losses, returns, wins, bigWins);
+        bool won = false;
+
+        if (startBalance < balance)
+        {
+            won = true;
+        }
+
+        stats.AddPlayerStats(startBalance, balance, Time - EntryTime, spins, losses, returns, wins, bigWins, won);
 
         Release(Slot);
     }
@@ -341,5 +367,7 @@ int main()
     stats.PrintMeanStats();
 
     cout << "Casino balance: " << CasinoBalance << " dollars." << endl;
+    cout << "Casino start balance: " << CasinoStartBalance << " dollars." << endl;
+    cout << "Casino profit: " << CasinoBalance - CasinoStartBalance << " dollars." << endl;
     return 0;
 }
