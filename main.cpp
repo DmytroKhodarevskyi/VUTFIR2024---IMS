@@ -7,6 +7,9 @@
 // #include "simlib.h"
 #include "main.hpp"
 
+#include <ctime>  // Include time for seeding random number generator
+#include <random> // For random_device
+
 using namespace std;
 
 // global objects:
@@ -47,9 +50,10 @@ class Player : public Process
         while (true)
         {
 
-            Wait(5);
+            Wait(Exponential(5));
 
             double outcome = Random();
+            printf("Outcome: %f\n", outcome);
             enum SPIN_RESULT result;
 
             double respin = Random();
@@ -126,15 +130,24 @@ class PeopleGenerator : public Event
     void Behavior()
     {
         (new Player)->Activate();
-        Activate(Time + Exponential(1.0 / 3600));
+        Activate(Time + Exponential(3600));
+        // Activate(Time + Exponential(3600));
     }
 };
 
 int main()
-{ // experiment description
+{ 
 
-    // int Runtime = 60 * 60 * 60 * 24;
-    int Runtime = 1000;
+    // Initialize the random number generator with a time-based seed
+    random_device rd;  // Obtain a random number from hardware
+    mt19937 gen(rd()); // Use that number to seed a random number generator
+    RandomSeed(gen());
+
+    // Set this generator to be used globally (if Random uses the global RNG)
+    srand(static_cast<unsigned int>(gen()));  // Seed the C++ random function
+
+    int Runtime = 60 * 60 * 24;
+    // int Runtime = 1000;
 
     Print("KAZIK\n");
     SetOutput("kazik.out");
