@@ -36,10 +36,11 @@ using namespace std;
 
 Facility Slot("Slot");
 
-// Histogram Losses("Losses", 0, 100, 20);
 Histogram Test("Losses", 0, 100, 20);
 Histogram StartBalances("Start Balances", 100, 2000, 20);  // Histogram for start balances
 Histogram EndBalances("End Balances", 100, 2000, 20);  // Histogram for end balances
+
+double CasinoBalance = SLOT_BALANCE;
 
 class Player : public Process
 {
@@ -73,20 +74,18 @@ class Player : public Process
             }
 
             balance -= STAKE; // Deduct 5 dollars per spin
+            CasinoBalance += STAKE; // Add 5 dollars to the casino balance
             cout << "Player " << Name() << " spent 5 dollars for a spin. Remaining balance: " << balance << " dollars." << endl;
 
             Wait(Exponential(5));
 
             double outcome = Random();
-            printf("Outcome: %f\n", outcome);
-            enum SPIN_RESULT result;
 
             double respin = Random();
 
             if (outcome < NO_WIN_SPIN)
             {
                 cout << "Player " << Name() << " lost at " << Time << endl;
-                result = NO_WIN;
 
                 if (respin < NO_WIN_RESPIN_CHANCE)
                 {
@@ -100,8 +99,8 @@ class Player : public Process
             else if (outcome < NO_WIN_SPIN + COMEBACK_SPIN)
             {
                 cout << "Player " << Name() << " won nothing at " << Time << endl;
-                result = COMEBACK;
                 balance += STAKE;
+                CasinoBalance -= STAKE;
                 if (respin < COMEBACK_RESPIN_CHANCE)
                 {
                     cout << "Player " << Name() << " respinned at " << Time << endl;
@@ -114,9 +113,9 @@ class Player : public Process
             else if (outcome < NO_WIN_SPIN + COMEBACK_SPIN + SMALL_WIN_SPIN)
             {
                 cout << "Player " << Name() << " had a small win at " << Time << endl;
-                result = SMALL_WIN;
                 double smallWinMultiplier = MIN_SMALL_WIN + (Random() * (MAX_SMALL_WIN - MIN_SMALL_WIN));
                 balance += STAKE * smallWinMultiplier;
+                CasinoBalance -= STAKE * smallWinMultiplier;
                 if (respin < SMALL_WIN_RESPIN_CHANCE)
                 {
                     cout << "Player " << Name() << " respinned at " << Time << endl;
@@ -129,9 +128,9 @@ class Player : public Process
             else
             {
                 cout << "Player " << Name() << " won a JACKPOT at " << Time << endl;
-                result = BIG_WIN;
                 double jackpotMultiplier = MIN_JACKPOT_MULTIPLIER + (Random() * (MAX_JACKPOT_MULTIPLIER - MIN_JACKPOT_MULTIPLIER));
                 balance += STAKE * jackpotMultiplier;
+                CasinoBalance -= STAKE * jackpotMultiplier;
                 if (respin < BIG_WIN_RESPIN_CHANCE)
                 {
                     cout << "Player " << Name() << " respinned at " << Time << endl;
@@ -141,9 +140,12 @@ class Player : public Process
                     break;
                 }
             }
-            // cout << "Player " << Name() << " started playing at " << Time << endl;
-            // Wait(Exponential(1e3/150));
-            // cout << "Player " << Name() << " finished playing at " << Time << endl;
+
+            if (CasinoBalance < 0)
+            {
+                cout << "Casino has gone bankrupt at " << Time << endl;
+                break;
+            }
         }
 
         cout << "Player " << Name() << " End balance " << balance << " dollars." << endl;
@@ -160,7 +162,6 @@ class PeopleGenerator : public Event
     {
         (new Player)->Activate();
         Activate(Time + Exponential(3600));
-        // Activate(Time + Exponential(3600));
     }
 };
 
@@ -175,12 +176,9 @@ int main()
     // Set this generator to be used globally (if Random uses the global RNG)
     srand(static_cast<unsigned int>(gen()));  // Seed the C++ random function
 
-    int Runtime = 60 * 60 * 24;
-    // int Runtime = 1000;
-
     Print("KAZIK\n");
     SetOutput("kazik.out");
-    Init(0, Runtime);                  // experiment initialization for time 0..1000
+    Init(0, RUNTIME);                  // experiment initialization for time 0..1000
     (new PeopleGenerator)->Activate(); // customer generator
     Run();                             // simulation
     //Test.Output();                     // print of results
@@ -189,5 +187,7 @@ int main()
     EndBalances.Output();
     //   Box.Output();              // print of results
     //   Table.Output();
+
+    cout << "Casino balance: " << CasinoBalance << " dollars." << endl;
     return 0;
 }

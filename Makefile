@@ -1,7 +1,7 @@
 # Compiler and flags
 CXX = g++
-# CXXFLAGS = -std=c++20 -Wall -Wextra -Werror -pedantic
-CXXFLAGS = -std=c++20 -Wall -Wextra -pedantic
+CXXFLAGS = -std=c++20 -Wall -Wextra -Werror -pedantic
+# CXXFLAGS = -std=c++20 -Wall -Wextra -pedantic
 
 # Project files and target
 SOURCES = $(wildcard *.cpp)

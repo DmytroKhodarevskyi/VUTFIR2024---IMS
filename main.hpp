@@ -1,6 +1,9 @@
 #include <iostream>
 #include <simlib.h>
 
+#define RUNTIME 60 * 60 * 24 
+
+#define SLOT_BALANCE 10000
 
 #define MIN_DEPOSIT 100
 #define STAKE 5
@@ -21,10 +24,10 @@
 #define MIN_SMALL_WIN 3
 #define MAX_SMALL_WIN 10
 
-enum SPIN_RESULT {
-    NO_WIN,
-    COMEBACK,
-    SMALL_WIN,
-    BIG_WIN
-};
+// enum SPIN_RESULT {
+//     NO_WIN,
+//     COMEBACK,
+//     SMALL_WIN,
+//     BIG_WIN
+// };
 
