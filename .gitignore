@@ -1,1 +1,9 @@
 #gitinore
+
+simlib/
+
+simlib*
+
+.vscode/
+
+*.out
