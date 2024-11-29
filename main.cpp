@@ -114,6 +114,8 @@ public:
             }
         }
 
+        double finalLosersOverWinners = static_cast<double>(totalLost) / totalWon;
+
         double winrate = static_cast<double>(totalWins + totalBigWins) / totalSpins;
         double meanLosses = static_cast<double>(totalLosses) / playerStats.size();
         double meanReturns = static_cast<double>(totalReturns) / playerStats.size();
@@ -149,6 +151,7 @@ public:
         cout << "| " << "Total big wins: " << totalBigWins << " |" << endl;
         cout << "| " << "Total poeple won: " << totalWon << " |" << endl;
         cout << "| " << "Total people lost: " << totalLost << " |" << endl;
+        cout << "| " << "Losers Over Winners coefficient: " << finalLosersOverWinners << " |" << endl;
         cout << "+========================================+" << endl;
         cout << "| " << "Mean start balance: " << meanStartBalance << " dollars." << " |" << endl;
         cout << "| " << "Mean end balance: " << meanEndBalance << " dollars." << " |" << endl;
@@ -301,7 +304,8 @@ class Player : public Process
             if (CasinoBalance < 0)
             {
                 cout << "Casino has gone bankrupt at " << Time << endl;
-                break;
+                return;
+                // break;
             }
         }
 
