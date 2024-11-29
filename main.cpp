@@ -18,11 +18,11 @@ RTPData* rtpData = &RTP_95;
 
 
 void help() {
-    cout << "Usage: kazik_simulator [options]\n";
+    cout << "Usage: ./simulation.exe [options]\n";
     cout << "Options:\n";
     cout << "  --help                  Show this help message and exit\n";
     cout << "  --rtp [value]           Set the RTP value (options: 85, 90, 92, 95)\n";
-    cout << "                          Default is 95\n";
+    cout << "   No options              Default is RTP 95\n";
     cout << "Example:\n";
     cout << "  ./simulation.exe --rtp 90\n";
     cout << "  ./simulation.exe --help\n";
@@ -115,7 +115,6 @@ public:
         }
 
         double winrate = static_cast<double>(totalWins + totalBigWins) / totalSpins;
-        // double meanWinrate = winrate / static_cast<double>(playerStats.size());
         double meanLosses = static_cast<double>(totalLosses) / playerStats.size();
         double meanReturns = static_cast<double>(totalReturns) / playerStats.size();
         double meanWins = static_cast<double>(totalWins) / playerStats.size();
@@ -125,24 +124,16 @@ public:
         double meanStartBalance = static_cast<double>(totalStartBalance) / playerStats.size();
         double meanEndBalance = static_cast<double>(totalEndBalance) / playerStats.size();
 
-
-        // double probabilities[] = {NO_WIN_SPIN, COMEBACK_SPIN, SMALL_WIN_SPIN, BIG_WIN_SPIN};
-        // double meanWinMultiplier = MAX_SMALL_WIN - MIN_SMALL_WIN / 2;
-        // double meanJackpotMultiplier = MAX_JACKPOT_MULTIPLIER - MIN_JACKPOT_MULTIPLIER / 2;
-
-      
         double probabilities[] = {rtpData->noWinSpin, rtpData->comebackSpin, rtpData->smallWinSpin, rtpData->bigWinSpin};
-        double meanWinMultiplier = rtpData->maxSmallWin - rtpData->minSmallWin / 2;
-        double meanJackpotMultiplier = rtpData->maxJackpotMultiplier - rtpData->minJackpotMultiplier / 2;
+    
+        double meanSmallWinMultiplier = (rtpData->maxSmallWin - rtpData->minSmallWin) / 2.0 + rtpData->minSmallWin;
+        double meanJackpotMultiplier = (rtpData->maxJackpotMultiplier - rtpData->minJackpotMultiplier) / 2.0 + rtpData->minJackpotMultiplier;
 
+        double multipliers[] = {0, 1, meanSmallWinMultiplier, meanJackpotMultiplier};
 
-        double multipliers[] = {0, 1, meanWinMultiplier, meanJackpotMultiplier};
-
-        int num_outcomes = sizeof(probabilities) / sizeof(probabilities[0]);
         double rtp = 0.0;
-
-        for (int i = 0; i < num_outcomes; i++)
-        {
+        int num_outcomes = sizeof(probabilities) / sizeof(probabilities[0]);
+        for (int i = 0; i < num_outcomes; i++) {
             rtp += probabilities[i] * multipliers[i]; 
         }
 
@@ -203,20 +194,20 @@ class Player : public Process
 
         double startBalance = balance;
 
-        // cout << "Player " << Name() << " starts with a balance of " << balance << " dollars." << endl;
         StartBalances(balance);
         if (balance < 100)
         {
-            // cout << "Player " << Name() << " cannot play. Not enough money!" << endl;
             Release(Slot);
             return;
         }
+
+        double respinChance = 0.85;  
+        double goHomeChance = 0.15;  
 
         while (true)
         {
             if (balance < 5)
             {
-                // cout << "Player " << Name() << " doesn't have enough balance to play. Going home at " << Time << endl;
                 break;
             }
 
@@ -224,7 +215,6 @@ class Player : public Process
 
             balance -= STAKE;      
             CasinoBalance += STAKE;
-            // cout << "Player " << Name() << " spent 5 dollars for a spin. Remaining balance: " << balance << " dollars." << endl;
 
             Wait(Exponential(5));
 
@@ -234,13 +224,14 @@ class Player : public Process
 
             if (outcome < rtpData->noWinSpin)
             {
-                // cout << "Player " << Name() << " lost at " << Time << endl;
+    
 
                 losses++;
-
-                if (respin <  rtpData->noWinRespinChance)
+                respinChance -= 0.15; 
+                goHomeChance += 0.15; 
+                if (respin <  respinChance)
                 {
-                    // cout << "Player " << Name() << " respinned at " << Time << endl;
+                    continue;
                 }
                 else
                 {
@@ -249,16 +240,16 @@ class Player : public Process
             }
             else if (outcome <  rtpData->noWinSpin + rtpData->comebackSpin)
             {
-                // cout << "Player " << Name() << " won nothing at " << Time << endl;
 
                 balance += STAKE;
                 CasinoBalance -= STAKE;
-
+                respinChance += 0.05; 
+                goHomeChance -= 0.05; 
                 returns++;
 
-                if (respin < rtpData->comebackRespinChance)
+                if (respin < respinChance)
                 {
-                    // cout << "Player " << Name() << " respinned at " << Time << endl;
+                    continue;
                 }
                 else
                 {
@@ -267,17 +258,18 @@ class Player : public Process
             }
             else if (outcome < rtpData->noWinSpin + rtpData->comebackSpin + rtpData->smallWinSpin)
             {
-                // cout << "Player " << Name() << " had a small win at " << Time << endl;
                 double smallWinMultiplier = rtpData->minSmallWin + (Random() * (rtpData->maxSmallWin - rtpData->minSmallWin));
 
                 balance += STAKE * smallWinMultiplier;
                 CasinoBalance -= STAKE * smallWinMultiplier;
+                respinChance += 0.07; 
+                goHomeChance -= 0.07; 
 
                 wins++;
 
-                if (respin < rtpData->smallWinRespinChance)
+                if (respin < respinChance)
                 {
-                    // cout << "Player " << Name() << " respinned at " << Time << endl;
+                    continue;
                 }
                 else
                 {
@@ -286,17 +278,19 @@ class Player : public Process
             }
             else
             {
-                // cout << "Player " << Name() << " won a JACKPOT at " << Time << endl;
                 double jackpotMultiplier = rtpData->minJackpotMultiplier + (Random() * (rtpData->maxJackpotMultiplier - rtpData->minJackpotMultiplier));
 
                 balance += STAKE * jackpotMultiplier;
                 CasinoBalance -= STAKE * jackpotMultiplier;
+                respinChance += 0.1; 
+                goHomeChance -= 0.1; 
+
 
                 bigWins++;
 
-                if (respin <  rtpData->bigWinRespinChance)
+                if (respin < respinChance)
                 {
-                    // cout << "Player " << Name() << " respinned at " << Time << endl;
+                    continue;
                 }
                 else
                 {
@@ -311,12 +305,7 @@ class Player : public Process
             }
         }
 
-        // cout << "Player " << Name() << " End balance " << balance << " dollars." << endl;
         EndBalances(balance);
-        // Test(Time - EntryTime);
-
-        // cout << "WINS: " << wins << " BIG WINS: " << bigWins << " RETURNS: " << returns << " LOSSES: " << losses << endl;
-
         bool won = false;
 
         if (startBalance < balance)
@@ -341,7 +330,6 @@ class PeopleGenerator : public Event
 
 int main(int argc, char* argv[])
 {
-
     random_device rd;
     mt19937 gen(rd());
     RandomSeed(gen());
@@ -371,7 +359,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    Print("KAZIK\n");
     SetOutput("kazik.out");
     Init(0, RUNTIME);                  
     (new PeopleGenerator)->Activate(); 

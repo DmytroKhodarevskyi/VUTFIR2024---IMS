@@ -15,17 +15,13 @@ struct RTPData {
     double smallWinSpin;
     double bigWinSpin;
 
-    double noWinRespinChance;
-    double comebackRespinChance;
-    double smallWinRespinChance;
-    double bigWinRespinChance;
-
     int minJackpotMultiplier;
     int maxJackpotMultiplier;
 
     int minSmallWin;
     int maxSmallWin;
 };
+
 
 // RTP 95%
 RTPData RTP_95 = {
@@ -34,12 +30,7 @@ RTPData RTP_95 = {
     0.18,   
     0.01, 
 
-    0.9,   
-    0.95,   
-    0.8,   
-    0.2,   
-
-    10,     
+    15,     
     25,     
 
     2,      
@@ -52,11 +43,6 @@ RTPData RTP_92 = {
     0.20,  
     0.19,  
     0.01,   
-
-    0.9,    
-    0.95,   
-    0.8,    
-    0.2,    
 
     10,     
     20,    
@@ -72,11 +58,6 @@ RTPData RTP_90 = {
     0.19,   
     0.01,   
 
-    0.9,   
-    0.95,   
-    0.8,    
-    0.2,   
-
     10,     
     20,     
 
@@ -90,11 +71,6 @@ RTPData RTP_85 = {
     0.19,   
     0.17,   
     0.01,  
-
-    0.9,    
-    0.95,   
-    0.8,    
-    0.25,   
 
     10,     
     20,     
