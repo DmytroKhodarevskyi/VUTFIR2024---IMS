@@ -1,47 +1,38 @@
-////////////////////////////////////////////////////////////////////////////
-// Model model2.cc                SIMLIB/C++
-//
-// Simple test model of queuing system
-//
-
-// #include "simlib.h"
 #include "main.hpp"
 
-#include <ctime>  // Include time for seeding random number generator
-#include <random> // For random_device
+#include <ctime> 
+#include <random> 
 
 using namespace std;
-
-// global objects:
-// Facility  Box("Box");
-// Histogram Table("Table",0,25,20);
-
-// class Customer : public Process {
-//   double Prichod;                 // atribute of each customer
-//   void Behavior() {               // --- behavoir specification ---
-//     Prichod = Time;               // incoming time
-//     Seize(Box);                   // start of service
-//     Wait(10);                     // time of service
-//     Release(Box);                 // end of service
-//     Table(Time-Prichod);          // waiting and service time
-//   }
-// };
-
-// class Generator : public Event {  // model of system's input
-//   void Behavior() {               // --- behavior specification ---
-//     (new Customer)->Activate();   // new customer
-//     Activate(Time+Exponential(1e3/150));  //
-//   }
-// };
 
 Facility Slot("Slot");
 
 Histogram Test("Losses", 0, 100, 20);
-Histogram StartBalances("Start Balances", 100, 2000, 20); // Histogram for start balances
-Histogram EndBalances("End Balances", 100, 2000, 20);     // Histogram for end balances
+Histogram StartBalances("Start Balances", 100, 2000, 20); 
+Histogram EndBalances("End Balances", 100, 2000, 20);     
 
 double CasinoBalance = SLOT_BALANCE;
 double CasinoStartBalance = SLOT_BALANCE;
+
+RTPData* rtpData = &RTP_95;
+
+
+void help() {
+    cout << "Usage: kazik_simulator [options]\n";
+    cout << "Options:\n";
+    cout << "  --help                  Show this help message and exit\n";
+    cout << "  --rtp [value]           Set the RTP value (options: 85, 90, 92, 95)\n";
+    cout << "                          Default is 95\n";
+    cout << "Example:\n";
+    cout << "  ./simulation.exe --rtp 90\n";
+    cout << "  ./simulation.exe --help\n";
+    cout << "if ./simulation.exe would be with other paramaters, it will run as usual with RTP 95 \n";
+    
+    cout << "\nWhat is RTP?\n";
+    cout << "RTP (Return to Player) is a percentage that indicates the expected return a player will receive over time. ";
+    cout << "For example, if a game has a 95% RTP, the player can expect to receive 95% of their bets back in the long run, on average.\n";
+}
+
 
 class Statistics
 {
@@ -134,20 +125,25 @@ public:
         double meanStartBalance = static_cast<double>(totalStartBalance) / playerStats.size();
         double meanEndBalance = static_cast<double>(totalEndBalance) / playerStats.size();
 
-        double probabilities[] = {NO_WIN_SPIN, COMEBACK_SPIN, SMALL_WIN_SPIN, BIG_WIN_SPIN};
-        double meanWinMultiplier = MAX_SMALL_WIN - MIN_SMALL_WIN / 2;
-        double meanJackpotMultiplier = MAX_JACKPOT_MULTIPLIER - MIN_JACKPOT_MULTIPLIER / 2;
+
+        // double probabilities[] = {NO_WIN_SPIN, COMEBACK_SPIN, SMALL_WIN_SPIN, BIG_WIN_SPIN};
+        // double meanWinMultiplier = MAX_SMALL_WIN - MIN_SMALL_WIN / 2;
+        // double meanJackpotMultiplier = MAX_JACKPOT_MULTIPLIER - MIN_JACKPOT_MULTIPLIER / 2;
+
+      
+        double probabilities[] = {rtpData->noWinSpin, rtpData->comebackSpin, rtpData->smallWinSpin, rtpData->bigWinSpin};
+        double meanWinMultiplier = rtpData->maxSmallWin - rtpData->minSmallWin / 2;
+        double meanJackpotMultiplier = rtpData->maxJackpotMultiplier - rtpData->minJackpotMultiplier / 2;
+
 
         double multipliers[] = {0, 1, meanWinMultiplier, meanJackpotMultiplier};
 
         int num_outcomes = sizeof(probabilities) / sizeof(probabilities[0]);
-
         double rtp = 0.0;
 
-        // Iterate through all outcomes to calculate weighted payout
         for (int i = 0; i < num_outcomes; i++)
         {
-            rtp += probabilities[i] * multipliers[i];
+            rtp += probabilities[i] * multipliers[i]; 
         }
 
         double rtp_percentage = rtp * 100;
@@ -194,11 +190,13 @@ class Player : public Process
     int returns = 0;
     int wins = 0;
     int bigWins = 0;
+
     void Behavior()
+
     {
         EntryTime = Time;
         Seize(Slot);
-        random_device rd; // Obtain a random number from hardware
+        random_device rd; 
         mt19937 gen(rd());
         uniform_real_distribution<double> dist(100.0, 1000.0);
         balance = dist(gen);
@@ -219,13 +217,13 @@ class Player : public Process
             if (balance < 5)
             {
                 // cout << "Player " << Name() << " doesn't have enough balance to play. Going home at " << Time << endl;
-                break; // End the game if the player has less than 5 dollars
+                break;
             }
 
             spins++;
 
-            balance -= STAKE;       // Deduct 5 dollars per spin
-            CasinoBalance += STAKE; // Add 5 dollars to the casino balance
+            balance -= STAKE;      
+            CasinoBalance += STAKE;
             // cout << "Player " << Name() << " spent 5 dollars for a spin. Remaining balance: " << balance << " dollars." << endl;
 
             Wait(Exponential(5));
@@ -234,13 +232,13 @@ class Player : public Process
 
             double respin = Random();
 
-            if (outcome < NO_WIN_SPIN)
+            if (outcome < rtpData->noWinSpin)
             {
                 // cout << "Player " << Name() << " lost at " << Time << endl;
 
                 losses++;
 
-                if (respin < NO_WIN_RESPIN_CHANCE)
+                if (respin <  rtpData->noWinRespinChance)
                 {
                     // cout << "Player " << Name() << " respinned at " << Time << endl;
                 }
@@ -249,7 +247,7 @@ class Player : public Process
                     break;
                 }
             }
-            else if (outcome < NO_WIN_SPIN + COMEBACK_SPIN)
+            else if (outcome <  rtpData->noWinSpin + rtpData->comebackSpin)
             {
                 // cout << "Player " << Name() << " won nothing at " << Time << endl;
 
@@ -258,7 +256,7 @@ class Player : public Process
 
                 returns++;
 
-                if (respin < COMEBACK_RESPIN_CHANCE)
+                if (respin < rtpData->comebackRespinChance)
                 {
                     // cout << "Player " << Name() << " respinned at " << Time << endl;
                 }
@@ -267,17 +265,17 @@ class Player : public Process
                     break;
                 }
             }
-            else if (outcome < NO_WIN_SPIN + COMEBACK_SPIN + SMALL_WIN_SPIN)
+            else if (outcome < rtpData->noWinSpin + rtpData->comebackSpin + rtpData->smallWinSpin)
             {
                 // cout << "Player " << Name() << " had a small win at " << Time << endl;
-                double smallWinMultiplier = MIN_SMALL_WIN + (Random() * (MAX_SMALL_WIN - MIN_SMALL_WIN));
+                double smallWinMultiplier = rtpData->minSmallWin + (Random() * (rtpData->maxSmallWin - rtpData->minSmallWin));
 
                 balance += STAKE * smallWinMultiplier;
                 CasinoBalance -= STAKE * smallWinMultiplier;
 
                 wins++;
 
-                if (respin < SMALL_WIN_RESPIN_CHANCE)
+                if (respin < rtpData->smallWinRespinChance)
                 {
                     // cout << "Player " << Name() << " respinned at " << Time << endl;
                 }
@@ -289,14 +287,14 @@ class Player : public Process
             else
             {
                 // cout << "Player " << Name() << " won a JACKPOT at " << Time << endl;
-                double jackpotMultiplier = MIN_JACKPOT_MULTIPLIER + (Random() * (MAX_JACKPOT_MULTIPLIER - MIN_JACKPOT_MULTIPLIER));
+                double jackpotMultiplier = rtpData->minJackpotMultiplier + (Random() * (rtpData->maxJackpotMultiplier - rtpData->minJackpotMultiplier));
 
                 balance += STAKE * jackpotMultiplier;
                 CasinoBalance -= STAKE * jackpotMultiplier;
 
                 bigWins++;
 
-                if (respin < BIG_WIN_RESPIN_CHANCE)
+                if (respin <  rtpData->bigWinRespinChance)
                 {
                     // cout << "Player " << Name() << " respinned at " << Time << endl;
                 }
@@ -341,29 +339,45 @@ class PeopleGenerator : public Event
     }
 };
 
-int main()
+int main(int argc, char* argv[])
 {
 
-    // Initialize the random number generator with a time-based seed
-    random_device rd;  // Obtain a random number from hardware
-    mt19937 gen(rd()); // Use that number to seed a random number generator
+    random_device rd;
+    mt19937 gen(rd());
     RandomSeed(gen());
 
-    // Set this generator to be used globally (if Random uses the global RNG)
-    srand(static_cast<unsigned int>(gen())); // Seed the C++ random function
+    srand(static_cast<unsigned int>(gen())); 
+
+     if (argc == 2 && string(argv[1]) == "--help") {
+        help();  
+        return 0;
+    }
+
+    for (int i = 1; i < argc; i++) {
+        if (string(argv[i]) == "--rtp" && i + 1 < argc) {
+            string rtpValue = argv[i + 1];
+            if (rtpValue == "85") {
+                rtpData = &RTP_85;  
+            } else if (rtpValue == "90") {
+                rtpData = &RTP_90;  
+            } else if (rtpValue == "92") {
+                rtpData = &RTP_92;  
+            } else if (rtpValue == "95") {
+                rtpData = &RTP_95;  
+            } else {
+                cout << "Invalid RTP value: " << rtpValue << ". Available options: 85, 90, 92, 95.\n";
+                return 1;  
+            }
+        }
+    }
 
     Print("KAZIK\n");
     SetOutput("kazik.out");
-    Init(0, RUNTIME);                  // experiment initialization for time 0..1000
-    (new PeopleGenerator)->Activate(); // customer generator
-    Run();                             // simulation
-    // Test.Output();                     // print of results
-    //  Slot.Output();
+    Init(0, RUNTIME);                  
+    (new PeopleGenerator)->Activate(); 
+    Run();                            
     StartBalances.Output();
     EndBalances.Output();
-    //   Box.Output();              // print of results
-    //   Table.Output();
-
     stats.PrintMeanStats();
 
     cout << "Casino balance: " << CasinoBalance << " dollars." << endl;

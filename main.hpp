@@ -8,18 +8,97 @@
 #define MIN_DEPOSIT 100
 #define STAKE 10
 
-#define NO_WIN_SPIN 0.6
-#define COMEBACK_SPIN 0.21 
-#define SMALL_WIN_SPIN 0.18 
-#define BIG_WIN_SPIN 0.01
 
-#define NO_WIN_RESPIN_CHANCE 0.9
-#define COMEBACK_RESPIN_CHANCE 0.95
-#define SMALL_WIN_RESPIN_CHANCE 0.8
-#define BIG_WIN_RESPIN_CHANCE 0.2
+struct RTPData {
+    double noWinSpin;
+    double comebackSpin;
+    double smallWinSpin;
+    double bigWinSpin;
 
-#define MIN_JACKPOT_MULTIPLIER 10
-#define MAX_JACKPOT_MULTIPLIER 25
+    double noWinRespinChance;
+    double comebackRespinChance;
+    double smallWinRespinChance;
+    double bigWinRespinChance;
 
-#define MIN_SMALL_WIN 2
-#define MAX_SMALL_WIN 4
+    int minJackpotMultiplier;
+    int maxJackpotMultiplier;
+
+    int minSmallWin;
+    int maxSmallWin;
+};
+
+// RTP 95%
+RTPData RTP_95 = {
+    0.6,    
+    0.21,  
+    0.18,   
+    0.01, 
+
+    0.9,   
+    0.95,   
+    0.8,   
+    0.2,   
+
+    10,     
+    25,     
+
+    2,      
+    4       
+};
+
+// RTP 92%
+RTPData RTP_92 = {
+    0.6,    
+    0.20,  
+    0.19,  
+    0.01,   
+
+    0.9,    
+    0.95,   
+    0.8,    
+    0.2,    
+
+    10,     
+    20,    
+
+    2,     
+    4      
+};
+
+// RTP 90%
+RTPData RTP_90 = {
+    0.62,   
+    0.18,   
+    0.19,   
+    0.01,   
+
+    0.9,   
+    0.95,   
+    0.8,    
+    0.2,   
+
+    10,     
+    20,     
+
+    2,      
+    4       
+};
+
+// RTP 85%
+RTPData RTP_85 = {
+    0.63,   
+    0.19,   
+    0.17,   
+    0.01,  
+
+    0.9,    
+    0.95,   
+    0.8,    
+    0.25,   
+
+    10,     
+    20,     
+
+    2,      
+    4       
+};
