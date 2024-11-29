@@ -204,8 +204,8 @@ class Player : public Process
             return;
         }
 
-        double respinChance = 0.85;  
-        double goHomeChance = 0.15;  
+        double respinChance = START_RESPIN_CHANCE;  
+        // double goHomeChance = 0.05;  
 
         while (true)
         {
@@ -230,8 +230,15 @@ class Player : public Process
     
 
                 losses++;
-                respinChance -= 0.15; 
-                goHomeChance += 0.15; 
+                respinChance *= NO_WIN_RESPIN_CHANCE_MULTIPLIER;
+                if (respinChance > 1)
+                {
+                    respinChance = 1;
+                }
+                // goHomeChance = 1 - respinChance;
+                
+                // respinChance -= 0.15; 
+                // goHomeChance += 0.15; 
                 if (respin <  respinChance)
                 {
                     continue;
@@ -246,8 +253,15 @@ class Player : public Process
 
                 balance += STAKE;
                 CasinoBalance -= STAKE;
-                respinChance += 0.05; 
-                goHomeChance -= 0.05; 
+                // respinChance += 0.05; 
+                // goHomeChance -= 0.05;
+
+                respinChance *= COMEBACK_RESPIN_CHANCE_MULTIPLIER;
+                if (respinChance > 1)
+                {
+                    respinChance = 1;
+                }
+                // goHomeChance = 1 - respinChance; 
                 returns++;
 
                 if (respin < respinChance)
@@ -265,8 +279,15 @@ class Player : public Process
 
                 balance += STAKE * smallWinMultiplier;
                 CasinoBalance -= STAKE * smallWinMultiplier;
-                respinChance += 0.07; 
-                goHomeChance -= 0.07; 
+                // respinChance += 0.07; 
+                // goHomeChance -= 0.07; 
+
+                respinChance *= SMALL_WIN_RESPIN_CHANCE_MULTIPLIER;
+                if (respinChance > 1)
+                {
+                    respinChance = 1;
+                }
+                // goHomeChance = 1 - respinChance;
 
                 wins++;
 
@@ -285,8 +306,15 @@ class Player : public Process
 
                 balance += STAKE * jackpotMultiplier;
                 CasinoBalance -= STAKE * jackpotMultiplier;
-                respinChance += 0.1; 
-                goHomeChance -= 0.1; 
+                // respinChance += 0.1; 
+                // goHomeChance -= 0.1; 
+
+                respinChance *= BIG_WIN_RESPIN_CHANCE_MULTIPLIER;
+                if (respinChance > 1)
+                {
+                    respinChance = 1;
+                }
+                // goHomeChance = 1 - respinChance;
 
 
                 bigWins++;

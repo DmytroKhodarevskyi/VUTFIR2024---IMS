@@ -1,13 +1,19 @@
 #include <iostream>
 #include <simlib.h>
 
-#define RUNTIME 60 * 60 * 24 * 7 * 4
+#define RUNTIME 60 * 60 * 24 * 7 * 4 * 12
 
 #define SLOT_BALANCE 10000
 
 #define MIN_DEPOSIT 100
 #define STAKE 10
 
+#define START_RESPIN_CHANCE 0.98
+
+#define NO_WIN_RESPIN_CHANCE_MULTIPLIER 0.95
+#define COMEBACK_RESPIN_CHANCE_MULTIPLIER 1.0
+#define SMALL_WIN_RESPIN_CHANCE_MULTIPLIER 1.2
+#define BIG_WIN_RESPIN_CHANCE_MULTIPLIER 1.4
 
 struct RTPData {
     double noWinSpin;
@@ -25,13 +31,13 @@ struct RTPData {
 
 // RTP 95%
 RTPData RTP_95 = {
-    0.6,    
-    0.21,  
+    0.55,    
+    0.26,  
     0.18,   
     0.01, 
 
-    15,     
-    25,     
+    10,     
+    20,     
 
     2,      
     4       
