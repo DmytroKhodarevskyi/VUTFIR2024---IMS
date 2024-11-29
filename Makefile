@@ -20,7 +20,7 @@ $(TARGET): $(SOURCES) $(HEADERS)
 
 # Run the program
 run: build
-	./$(TARGET)
+	./$(TARGET) $(ARGS)
 
 # Clean rule
 clean:
