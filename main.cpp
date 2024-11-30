@@ -13,6 +13,7 @@ Histogram EndBalances("End Balances", 100, 2000, 20);
 
 double CasinoBalance = SLOT_BALANCE;
 double CasinoStartBalance = SLOT_BALANCE;
+int PeopleFrequency = START_PEOPLE_FREQUENCY;
 
 RTPData* rtpData = &RTP_95;
 
@@ -192,7 +193,7 @@ class Player : public Process
         Seize(Slot);
         random_device rd; 
         mt19937 gen(rd());
-        uniform_real_distribution<double> dist(100.0, 1000.0);
+        uniform_real_distribution<double> dist(MIN_DEPOSIT, MAX_DEPOSIT);
         balance = dist(gen);
 
         double startBalance = balance;
@@ -339,10 +340,23 @@ class Player : public Process
 
         EndBalances(balance);
         bool won = false;
+        // double moneyModule = balance - startBalance;
+        // if (moneyModule < 0)
+        // {
+        //     moneyModule = -moneyModule;
+        // }
+
+        // cerr << "Money module: " << moneyModule << endl;
 
         if (startBalance < balance)
         {
             won = true;
+            // PeopleFrequency *= WINNER_FREQUENCY_MULTIPLIER * (moneyModule / 10);
+            PeopleFrequency *= WINNER_FREQUENCY_MULTIPLIER;
+        } else {
+            won = false;
+            // PeopleFrequency *= LOSER_FREQUENCY_MULTIPLIER * (moneyModule / 10);
+            PeopleFrequency *= LOSER_FREQUENCY_MULTIPLIER;
         }
 
         stats.AddPlayerStats(startBalance, balance, Time - EntryTime, spins, losses, returns, wins, bigWins, won);
@@ -356,7 +370,7 @@ class PeopleGenerator : public Event
     void Behavior()
     {
         (new Player)->Activate();
-        Activate(Time + Exponential(3600));
+        Activate(Time + Exponential(PeopleFrequency));
     }
 };
 
@@ -385,6 +399,8 @@ int main(int argc, char* argv[])
                 rtpData = &RTP_92;  
             } else if (rtpValue == "95") {
                 rtpData = &RTP_95;  
+            } else if (rtpValue == "65") {
+                rtpData = &RTP_65;  
             } else {
                 cout << "Invalid RTP value: " << rtpValue << ". Available options: 85, 90, 92, 95.\n";
                 return 1;  
