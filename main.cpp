@@ -22,16 +22,12 @@ void help() {
     cout << "Usage: ./simulation.exe [options]\n";
     cout << "Options:\n";
     cout << "  --help                  Show this help message and exit\n";
-    cout << "  --rtp [value]           Set the RTP value (options: 85, 90, 92, 95)\n";
+    cout << "  --rtp [value]           Set the RTP value (options: 65, 85, 90, 92, 95)\n";
     cout << "   No options              Default is RTP 95\n";
     cout << "Example:\n";
     cout << "  ./simulation.exe --rtp 90\n";
     cout << "  ./simulation.exe --help\n";
     cout << "if ./simulation.exe would be with other paramaters, it will run as usual with RTP 95 \n";
-    
-    cout << "\nWhat is RTP?\n";
-    cout << "RTP (Return to Player) is a percentage that indicates the expected return a player will receive over time. ";
-    cout << "For example, if a game has a 95% RTP, the player can expect to receive 95% of their bets back in the long run, on average.\n";
 }
 
 
@@ -206,7 +202,6 @@ class Player : public Process
         }
 
         double respinChance = START_RESPIN_CHANCE;  
-        // double goHomeChance = 0.05;  
 
         while (true)
         {
@@ -236,10 +231,7 @@ class Player : public Process
                 {
                     respinChance = 1;
                 }
-                // goHomeChance = 1 - respinChance;
                 
-                // respinChance -= 0.15; 
-                // goHomeChance += 0.15; 
                 if (respin <  respinChance)
                 {
                     continue;
@@ -254,15 +246,12 @@ class Player : public Process
 
                 balance += STAKE;
                 CasinoBalance -= STAKE;
-                // respinChance += 0.05; 
-                // goHomeChance -= 0.05;
 
                 respinChance *= COMEBACK_RESPIN_CHANCE_MULTIPLIER;
                 if (respinChance > 1)
                 {
                     respinChance = 1;
                 }
-                // goHomeChance = 1 - respinChance; 
                 returns++;
 
                 if (respin < respinChance)
@@ -280,15 +269,12 @@ class Player : public Process
 
                 balance += STAKE * smallWinMultiplier;
                 CasinoBalance -= STAKE * smallWinMultiplier;
-                // respinChance += 0.07; 
-                // goHomeChance -= 0.07; 
 
                 respinChance *= SMALL_WIN_RESPIN_CHANCE_MULTIPLIER;
                 if (respinChance > 1)
                 {
                     respinChance = 1;
                 }
-                // goHomeChance = 1 - respinChance;
 
                 wins++;
 
@@ -307,15 +293,12 @@ class Player : public Process
 
                 balance += STAKE * jackpotMultiplier;
                 CasinoBalance -= STAKE * jackpotMultiplier;
-                // respinChance += 0.1; 
-                // goHomeChance -= 0.1; 
 
                 respinChance *= BIG_WIN_RESPIN_CHANCE_MULTIPLIER;
                 if (respinChance > 1)
                 {
                     respinChance = 1;
                 }
-                // goHomeChance = 1 - respinChance;
 
 
                 bigWins++;
@@ -334,28 +317,18 @@ class Player : public Process
             {
                 cout << "Casino has gone bankrupt at " << Time << endl;
                 return;
-                // break;
             }
         }
 
         EndBalances(balance);
         bool won = false;
-        // double moneyModule = balance - startBalance;
-        // if (moneyModule < 0)
-        // {
-        //     moneyModule = -moneyModule;
-        // }
-
-        // cerr << "Money module: " << moneyModule << endl;
 
         if (startBalance < balance)
         {
             won = true;
-            // PeopleFrequency *= WINNER_FREQUENCY_MULTIPLIER * (moneyModule / 10);
             PeopleFrequency *= WINNER_FREQUENCY_MULTIPLIER;
         } else {
             won = false;
-            // PeopleFrequency *= LOSER_FREQUENCY_MULTIPLIER * (moneyModule / 10);
             PeopleFrequency *= LOSER_FREQUENCY_MULTIPLIER;
         }
 
@@ -408,7 +381,7 @@ int main(int argc, char* argv[])
         }
     }
 
-    SetOutput("kazik.out");
+    SetOutput("simulation.out");
     Init(0, RUNTIME);                  
     (new PeopleGenerator)->Activate(); 
     Run();                            

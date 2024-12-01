@@ -1,15 +1,14 @@
 #include <iostream>
 #include <simlib.h>
 
-#define RUNTIME 60 * 60 * 24 * 7 * 4 * 12
+// #define RUNTIME 60 * 60 * 24 * 7 * 4 * 12 * 10 // 10 years
+#define RUNTIME 60 * 60 * 24 * 7 * 4 * 12 // 1 year
 
 #define SLOT_BALANCE 10000
 
 #define START_PEOPLE_FREQUENCY 3600
 #define LOSER_FREQUENCY_MULTIPLIER 1.01
-// #define LOSER_FREQUENCY_MULTIPLIER 1.01
 #define WINNER_FREQUENCY_MULTIPLIER 0.99
-// #define WINNER_FREQUENCY_MULTIPLIER 0.99
 
 #define MIN_DEPOSIT 100
 #define MAX_DEPOSIT 1000
